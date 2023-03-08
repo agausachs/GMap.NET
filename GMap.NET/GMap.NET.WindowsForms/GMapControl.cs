@@ -716,20 +716,53 @@ namespace GMap.NET.WindowsForms
         /// <param name="polygon"></param>
         public void UpdatePolygonLocalPosition(GMapPolygon polygon)
         {
-            polygon.LocalPoints.Clear();
-
-            for (int i = 0; i < polygon.Points.Count; i++)
+            if (polygon is GMapPolygonHole polyHole)
             {
-                var p = FromLatLngToLocal(polygon.Points[i]);
-                if (!MobileMode)
+                //Clear ALL Points (including Holes)!
+                polyHole.LocalPoints.Clear();
+
+                foreach (var pg in polyHole.Points)
                 {
+                    var p = FromLatLngToLocal(pg);
                     p.OffsetNegative(Core.RenderOffset);
+                    polyHole.LocalPoints.Add(p);
                 }
 
-                polygon.LocalPoints.Add(p);
-            }
+                polyHole.ListPointsLocalHoles.Clear();
 
-            polygon.UpdateGraphicsPath();
+                foreach (var holePoints in polyHole.ListPointHoles)
+                {
+                    var localPoints = new List<GPoint>();
+
+                    foreach (var pg in holePoints)
+                    {
+                        var p = FromLatLngToLocal(pg);
+                        p.OffsetNegative(Core.RenderOffset);
+                        localPoints.Add(p);
+                    }
+
+                    polyHole.ListPointsLocalHoles.Add(localPoints);
+                }
+
+                polyHole.UpdateGraphicsPath();
+            }
+            else
+            {
+                polygon.LocalPoints.Clear();
+
+                for (int i = 0; i < polygon.Points.Count; i++)
+                {
+                    var p = FromLatLngToLocal(polygon.Points[i]);
+                    if (!MobileMode)
+                    {
+                        p.OffsetNegative(Core.RenderOffset);
+                    }
+
+                    polygon.LocalPoints.Add(p);
+                }
+
+                polygon.UpdateGraphicsPath();
+            }
         }
 
         /// <summary>
